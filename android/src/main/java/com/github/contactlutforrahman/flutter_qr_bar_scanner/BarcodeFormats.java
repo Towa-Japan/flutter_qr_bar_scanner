@@ -1,5 +1,6 @@
 package com.github.contactlutforrahman.flutter_qr_bar_scanner;
 
+import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 
 import java.util.ArrayList;
@@ -10,20 +11,20 @@ import java.util.Map;
 
 public enum BarcodeFormats {
 
-    ALL_FORMATS(com.google.mlkit.vision.barcode.Barcode.FORMAT_ALL_FORMATS),
-    CODE_128(com.google.mlkit.vision.barcode.Barcode.FORMAT_CODE_128),
-    CODE_39(com.google.mlkit.vision.barcode.Barcode.FORMAT_CODE_39),
-    CODE_93(com.google.mlkit.vision.barcode.Barcode.FORMAT_CODE_93),
-    CODABAR(com.google.mlkit.vision.barcode.Barcode.FORMAT_CODABAR),
-    DATA_MATRIX(com.google.mlkit.vision.barcode.Barcode.FORMAT_DATA_MATRIX),
-    EAN_13(com.google.mlkit.vision.barcode.Barcode.FORMAT_EAN_13),
-    EAN_8(com.google.mlkit.vision.barcode.Barcode.FORMAT_EAN_8),
-    ITF(com.google.mlkit.vision.barcode.Barcode.FORMAT_ITF),
-    QR_CODE(com.google.mlkit.vision.barcode.Barcode.FORMAT_QR_CODE),
-    UPC_A(com.google.mlkit.vision.barcode.Barcode.FORMAT_UPC_A),
-    UPC_E(com.google.mlkit.vision.barcode.Barcode.FORMAT_UPC_E),
-    PDF417(com.google.mlkit.vision.barcode.Barcode.FORMAT_PDF417),
-    AZTEC(com.google.mlkit.vision.barcode.Barcode.FORMAT_AZTEC);
+    ALL_FORMATS(Barcode.FORMAT_ALL_FORMATS),
+    CODE_128(Barcode.FORMAT_CODE_128),
+    CODE_39(Barcode.FORMAT_CODE_39),
+    CODE_93(Barcode.FORMAT_CODE_93),
+    CODABAR(Barcode.FORMAT_CODABAR),
+    DATA_MATRIX(Barcode.FORMAT_DATA_MATRIX),
+    EAN_13(Barcode.FORMAT_EAN_13),
+    EAN_8(Barcode.FORMAT_EAN_8),
+    ITF(Barcode.FORMAT_ITF),
+    QR_CODE(Barcode.FORMAT_QR_CODE),
+    UPC_A(Barcode.FORMAT_UPC_A),
+    UPC_E(Barcode.FORMAT_UPC_E),
+    PDF417(Barcode.FORMAT_PDF417),
+    AZTEC(Barcode.FORMAT_AZTEC);
 
     BarcodeFormats(int intValue) {
         this.intValue = intValue;
