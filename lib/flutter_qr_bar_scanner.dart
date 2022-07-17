@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_qr_bar_scanner/scan_result.dart';
 
 class PreviewDetails {
   num? width;
@@ -88,7 +89,7 @@ class FlutterQrReader {
 
 enum FrameRotation { none, ninetyCC, oneeighty, twoseventyCC }
 
-typedef void QRCodeHandler(String? qr);
+typedef void QRCodeHandler(ScanResult qr);
 
 class QrChannelReader {
   QrChannelReader(this.channel) {
@@ -96,8 +97,10 @@ class QrChannelReader {
       switch (call.method) {
         case 'qrRead':
           if (qrCodeHandler != null) {
-            assert(call.arguments is String);
-            qrCodeHandler!(call.arguments);
+            final args = ScanResult.fromChannelArgs(
+              Map.from(call.arguments),
+            );
+            qrCodeHandler!(args);
           }
           break;
         default:

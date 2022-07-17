@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_qr_bar_scanner/scan_result.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:flutter_qr_bar_scanner/flutter_qr_bar_scanner.dart';
 
@@ -32,7 +33,7 @@ class QRBarScannerCamera extends StatefulWidget {
         super(key: key);
 
   final BoxFit fit;
-  final ValueChanged<String?> qrCodeCallback;
+  final ValueChanged<ScanResult> qrCodeCallback;
   final Widget? child;
   final WidgetBuilder notStartedBuilder;
   final WidgetBuilder offscreenBuilder;

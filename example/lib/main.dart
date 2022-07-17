@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_qr_bar_scanner/scan_result.dart';
 import 'package:flutter_qr_bar_scanner/qr_bar_scanner_camera.dart';
 
 void main() {
@@ -30,10 +31,10 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _qrInfo = 'Scan a QR/Bar code';
   bool _camState = false;
 
-  _qrCallback(String? code) {
+  _qrCallback(ScanResult rslt) {
     setState(() {
       _camState = false;
-      _qrInfo = code;
+      _qrInfo = rslt.content;
     });
   }
 
@@ -62,23 +63,23 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: _camState
           ? Center(
-        child: SizedBox(
-          height: 1000,
-          width: 500,
-          child: QRBarScannerCamera(
-            onError: (context, error) => Text(
-              error.toString(),
-              style: TextStyle(color: Colors.red),
-            ),
-            qrCodeCallback: (code) {
-              _qrCallback(code);
-            },
-          ),
-        ),
-      )
+              child: SizedBox(
+                height: 1000,
+                width: 500,
+                child: QRBarScannerCamera(
+                  onError: (context, error) => Text(
+                    error.toString(),
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  qrCodeCallback: (code) {
+                    _qrCallback(code);
+                  },
+                ),
+              ),
+            )
           : Center(
-        child: Text(_qrInfo!),
-      ),
+              child: Text(_qrInfo!),
+            ),
     );
   }
 }
