@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:flutter_qr_bar_scanner/flutter_qr_bar_scanner.dart';
 
