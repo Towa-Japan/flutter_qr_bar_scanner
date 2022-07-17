@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.NoSuchElementException;
 
 public enum BarcodeFormats {
 
@@ -97,5 +97,13 @@ public enum BarcodeFormats {
             .setBarcodeFormats(first, rest).build();
     }
 
+    public static BarcodeFormats getFromValue(final int value) {
+        for (BarcodeFormats bf : BarcodeFormats.values()) {
+            if(bf.intValue == value) {
+                return bf;
+            }
+        }
+        throw new NoSuchElementException();
+    }
 
 }
