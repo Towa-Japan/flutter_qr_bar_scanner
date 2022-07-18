@@ -10,6 +10,14 @@ class ScanResult {
 
   const ScanResult(this.content, this.bounds, this.format);
 
+  ScanResult applyTransform(Rect Function(Rect) transform) {
+    return ScanResult(
+      this.content,
+      transform(this.bounds),
+      this.format,
+    );
+  }
+
   static ScanResult fromChannelArgs(Map<String, dynamic> args) {
     final bb = Map.from(args["bounds"]);
     final bounds = Rect.fromLTRB(

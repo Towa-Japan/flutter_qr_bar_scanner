@@ -1,16 +1,16 @@
 import 'dart:async';
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_qr_bar_scanner/scan_result.dart';
 
 class PreviewDetails {
-  num? width;
-  num? height;
-  num? sensorOrientation;
-  int? textureId;
+  final Size size;
+  final int sensorOrientation;
+  final int textureId;
 
-  PreviewDetails(
-      this.width, this.height, this.sensorOrientation, this.textureId);
+  PreviewDetails(int width, int height, this.sensorOrientation, this.textureId)
+      : size = Size(width.toDouble(), height.toDouble());
 }
 
 enum BarcodeFormats {
@@ -43,6 +43,7 @@ class FlutterQrReader {
   static Future<PreviewDetails> start({
     required int width,
     required int height,
+    required Rect Function(Rect) Function() transformBuilder,
     required QRCodeHandler qrCodeHandler,
     List<BarcodeFormats>? formats = _defaultBarcodeFormats,
   }) async {
@@ -53,7 +54,6 @@ class FlutterQrReader {
         .map((format) => format.toString().split('.')[1])
         .toList(growable: false);
 
-    channelReader.setQrCodeHandler(qrCodeHandler);
     var details = await _channel.invokeMethod('start', {
       'targetWidth': width,
       'targetHeight': height,
@@ -64,10 +64,13 @@ class FlutterQrReader {
     // invokeMethod returns Map<dynamic,...> in dart 2.0
     assert(details is Map<dynamic, dynamic>);
 
-    int? textureId = details["textureId"];
-    num? orientation = details["surfaceOrientation"];
-    num? surfaceHeight = details["surfaceHeight"];
-    num? surfaceWidth = details["surfaceWidth"];
+    int textureId = details["textureId"];
+    int orientation = details["surfaceOrientation"];
+    int surfaceHeight = details["surfaceHeight"];
+    int surfaceWidth = details["surfaceWidth"];
+
+    channelReader.setTransformBuilder(transformBuilder);
+    channelReader.setQrCodeHandler(qrCodeHandler);
 
     return PreviewDetails(surfaceWidth, surfaceHeight, orientation, textureId);
   }
@@ -97,10 +100,13 @@ class QrChannelReader {
       switch (call.method) {
         case 'qrRead':
           if (qrCodeHandler != null) {
-            final args = call.arguments as List;
-            qrCodeHandler!(
-              args.map((e) => ScanResult.fromChannelArgs(Map.from(e))),
-            );
+            var args = (call.arguments as List)
+                .map((e) => ScanResult.fromChannelArgs(Map.from(e)));
+            if (this._transformBuilder != null) {
+              final transform = this._transformBuilder!();
+              args = args.map((e) => e.applyTransform(transform));
+            }
+            qrCodeHandler!(args);
           }
           break;
         default:
@@ -114,6 +120,11 @@ class QrChannelReader {
     this.qrCodeHandler = qrch;
   }
 
+  void setTransformBuilder(Rect Function(Rect) Function() transformBuilder) {
+    this._transformBuilder = transformBuilder;
+  }
+
   MethodChannel channel;
   QRCodeHandler? qrCodeHandler;
+  Rect Function(Rect) Function()? _transformBuilder;
 }

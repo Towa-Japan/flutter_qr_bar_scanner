@@ -75,15 +75,72 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
 
   bool onScreen = true;
   Future<PreviewDetails>? _asyncInitOnce;
+  Orientation? _deviceOrientation;
+  PreviewDetails? _previewDetails;
 
   Future<PreviewDetails> _asyncInit(num width, num height) async {
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    assert(widget.fit == BoxFit.cover);
+
     return await FlutterQrReader.start(
       width: (devicePixelRatio * width.toInt()).ceil(),
       height: (devicePixelRatio * height.toInt()).ceil(),
       qrCodeHandler: widget.qrCodeCallback,
+      transformBuilder: _transformBuilder,
       formats: widget.formats,
     );
+  }
+
+  Rect Function(Rect) _transformBuilder() {
+    assert(widget.fit == BoxFit.cover);
+
+    if (_previewDetails == null) {
+      return (r) => r;
+    }
+    final preview = _previewDetails!;
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final rotationCompensation = _getRotationCompensation(
+      (_deviceOrientation == null)
+          ? NativeDeviceOrientation.unknown
+          : (_deviceOrientation == Orientation.portrait
+              ? NativeDeviceOrientation.portraitUp
+              : NativeDeviceOrientation.landscapeLeft),
+      preview.sensorOrientation,
+    );
+    final widgetSize = (context.findRenderObject() as RenderBox).size;
+    final displaySize = Size(
+      widgetSize.width * devicePixelRatio,
+      widgetSize.height * devicePixelRatio,
+    );
+    final previewSizeResolved =
+        (rotationCompensation % 2 == 0) ? preview.size.flipped : preview.size;
+
+    switch (widget.fit) {
+      case BoxFit.cover:
+        final scale = (displaySize.aspectRatio >= 1)
+            ? displaySize.width / previewSizeResolved.width
+            : displaySize.height / previewSizeResolved.height;
+        final offset = Offset(
+          (previewSizeResolved.width * scale - displaySize.width) / 2,
+          (previewSizeResolved.height * scale - displaySize.height) / 2,
+        );
+
+        return (bounds) {
+          return Rect.fromLTWH(
+            (bounds.left * scale - offset.dx) / devicePixelRatio,
+            (bounds.top * scale - offset.dy) / devicePixelRatio,
+            bounds.width * scale / devicePixelRatio,
+            bounds.height * scale / devicePixelRatio,
+          );
+        };
+      case BoxFit.fill:
+      case BoxFit.contain:
+      case BoxFit.fitWidth:
+      case BoxFit.fitHeight:
+      case BoxFit.none:
+      case BoxFit.scaleDown:
+        throw Error();
+    }
   }
 
   /// This method can be used to restart scanning
@@ -124,8 +181,11 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
 
         return FutureBuilder(
           future: _asyncInitOnce,
-          builder:
-              (BuildContext context, AsyncSnapshot<PreviewDetails> details) {
+          builder: (
+            BuildContext context,
+            AsyncSnapshot<PreviewDetails> details,
+          ) {
+            _previewDetails = details.data;
             switch (details.connectionState) {
               case ConnectionState.none:
               case ConnectionState.waiting:
@@ -135,26 +195,33 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
                   debugPrint(details.error.toString());
                   return widget.onError(context, details.error);
                 }
-                Widget preview = SizedBox(
-                  width: constraints.maxWidth,
-                  height: constraints.maxHeight,
-                  child: Preview(
-                    previewDetails: details.data!,
-                    targetWidth: constraints.maxWidth,
-                    targetHeight: constraints.maxHeight,
-                    fit: widget.fit,
-                  ),
-                );
 
-                if (widget.child != null) {
-                  return Stack(
-                    children: [
-                      preview,
-                      widget.child!,
-                    ],
-                  );
-                }
-                return preview;
+                return OrientationBuilder(
+                  builder: (context, orientation) {
+                    _deviceOrientation = orientation;
+
+                    Widget preview = SizedBox(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      child: Preview(
+                        previewDetails: details.data!,
+                        targetWidth: constraints.maxWidth,
+                        targetHeight: constraints.maxHeight,
+                        fit: widget.fit,
+                      ),
+                    );
+
+                    if (widget.child != null) {
+                      return Stack(
+                        children: [
+                          preview,
+                          widget.child!,
+                        ],
+                      );
+                    }
+                    return preview;
+                  },
+                );
 
               default:
                 throw AssertionError(
@@ -167,11 +234,37 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
   }
 }
 
+int _getRotationCompensation(
+  final NativeDeviceOrientation deviceOrientation,
+  final int cameraOrientation,
+) {
+  int nativeRotation = 0;
+  switch (deviceOrientation) {
+    case NativeDeviceOrientation.portraitUp:
+      nativeRotation = 0;
+      break;
+    case NativeDeviceOrientation.landscapeRight:
+      nativeRotation = 90;
+      break;
+    case NativeDeviceOrientation.portraitDown:
+      nativeRotation = 180;
+      break;
+    case NativeDeviceOrientation.landscapeLeft:
+      nativeRotation = 270;
+      break;
+    case NativeDeviceOrientation.unknown:
+    default:
+      break;
+  }
+
+  return ((nativeRotation - cameraOrientation + 450) % 360) ~/ 90;
+}
+
 class Preview extends StatelessWidget {
-  final double width, height;
+  final Size size;
   final double targetWidth, targetHeight;
-  final int? textureId;
-  final int? sensorOrientation;
+  final int textureId;
+  final int sensorOrientation;
   final BoxFit fit;
 
   Preview({
@@ -180,41 +273,17 @@ class Preview extends StatelessWidget {
     required this.targetHeight,
     required this.fit,
   })  : textureId = previewDetails.textureId,
-        width = previewDetails.width!.toDouble(),
-        height = previewDetails.height!.toDouble(),
-        sensorOrientation = previewDetails.sensorOrientation as int?;
+        size = previewDetails.size.flipped,
+        sensorOrientation = previewDetails.sensorOrientation;
 
   @override
   Widget build(BuildContext context) {
     return NativeDeviceOrientationReader(
       builder: (context) {
-        var nativeOrientation =
-            NativeDeviceOrientationReader.orientation(context);
-
-        int nativeRotation = 0;
-        switch (nativeOrientation) {
-          case NativeDeviceOrientation.portraitUp:
-            nativeRotation = 0;
-            break;
-          case NativeDeviceOrientation.landscapeRight:
-            nativeRotation = 90;
-            break;
-          case NativeDeviceOrientation.portraitDown:
-            nativeRotation = 180;
-            break;
-          case NativeDeviceOrientation.landscapeLeft:
-            nativeRotation = 270;
-            break;
-          case NativeDeviceOrientation.unknown:
-          default:
-            break;
-        }
-
-        int rotationCompensation =
-            ((nativeRotation - sensorOrientation! + 450) % 360) ~/ 90;
-
-        double frameHeight = width;
-        double frameWidth = height;
+        final rotationCompensation = _getRotationCompensation(
+          NativeDeviceOrientationReader.orientation(context),
+          sensorOrientation,
+        );
 
         return ClipRect(
           child: FittedBox(
@@ -222,9 +291,9 @@ class Preview extends StatelessWidget {
             child: RotatedBox(
               quarterTurns: rotationCompensation,
               child: SizedBox(
-                width: frameWidth,
-                height: frameHeight,
-                child: Texture(textureId: textureId!),
+                width: size.width,
+                height: size.height,
+                child: Texture(textureId: textureId),
               ),
             ),
           ),
