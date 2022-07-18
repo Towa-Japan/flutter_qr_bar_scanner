@@ -114,53 +114,56 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-      if (_asyncInitOnce == null && onScreen) {
-        _asyncInitOnce =
-            _asyncInit(constraints.maxWidth, constraints.maxHeight);
-      } else if (!onScreen) {
-        return widget.offscreenBuilder(context);
-      }
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (_asyncInitOnce == null && onScreen) {
+          _asyncInitOnce =
+              _asyncInit(constraints.maxWidth, constraints.maxHeight);
+        } else if (!onScreen) {
+          return widget.offscreenBuilder(context);
+        }
 
-      return FutureBuilder(
-        future: _asyncInitOnce,
-        builder: (BuildContext context, AsyncSnapshot<PreviewDetails> details) {
-          switch (details.connectionState) {
-            case ConnectionState.none:
-            case ConnectionState.waiting:
-              return widget.notStartedBuilder(context);
-            case ConnectionState.done:
-              if (details.hasError) {
-                debugPrint(details.error.toString());
-                return widget.onError(context, details.error);
-              }
-              Widget preview = SizedBox(
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                child: Preview(
-                  previewDetails: details.data!,
-                  targetWidth: constraints.maxWidth,
-                  targetHeight: constraints.maxHeight,
-                  fit: widget.fit,
-                ),
-              );
-
-              if (widget.child != null) {
-                return Stack(
-                  children: [
-                    preview,
-                    widget.child!,
-                  ],
+        return FutureBuilder(
+          future: _asyncInitOnce,
+          builder:
+              (BuildContext context, AsyncSnapshot<PreviewDetails> details) {
+            switch (details.connectionState) {
+              case ConnectionState.none:
+              case ConnectionState.waiting:
+                return widget.notStartedBuilder(context);
+              case ConnectionState.done:
+                if (details.hasError) {
+                  debugPrint(details.error.toString());
+                  return widget.onError(context, details.error);
+                }
+                Widget preview = SizedBox(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                  child: Preview(
+                    previewDetails: details.data!,
+                    targetWidth: constraints.maxWidth,
+                    targetHeight: constraints.maxHeight,
+                    fit: widget.fit,
+                  ),
                 );
-              }
-              return preview;
 
-            default:
-              throw AssertionError("${details.connectionState} not supported.");
-          }
-        },
-      );
-    });
+                if (widget.child != null) {
+                  return Stack(
+                    children: [
+                      preview,
+                      widget.child!,
+                    ],
+                  );
+                }
+                return preview;
+
+              default:
+                throw AssertionError(
+                    "${details.connectionState} not supported.");
+            }
+          },
+        );
+      },
+    );
   }
 }
 
