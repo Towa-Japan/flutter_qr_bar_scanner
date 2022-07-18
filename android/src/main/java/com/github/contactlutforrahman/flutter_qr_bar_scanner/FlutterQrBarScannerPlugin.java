@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -212,8 +214,10 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
     }
 
     @Override
-    public void qrRead(QrBarcode data) {
-        channel.invokeMethod("qrRead", data.getForChannel());
+    public void qrRead(Stream<QrBarcode> data) {
+        channel.invokeMethod("qrRead",
+            data.map(d -> d.getForChannel())
+                .collect(Collectors.toCollection(ArrayList::new)));
     }
 
     @Override

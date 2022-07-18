@@ -75,10 +75,9 @@ class QrDetector implements OnSuccessListener<List<Barcode>>, OnFailureListener 
     }
 
     @Override
-    public void onSuccess(List<Barcode> firebaseVisionBarcodes) {
-        for (Barcode barcode : firebaseVisionBarcodes) {
-            communicator.qrRead(new QrBarcode(barcode));
-        }
+    public void onSuccess(List<Barcode> barcodes) {
+        communicator.qrRead(barcodes.stream().map(b -> new QrBarcode(b)));
+
         processLatest();
     }
 

@@ -31,11 +31,14 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _qrInfo = 'Scan a QR/Bar code';
   bool _camState = false;
 
-  _qrCallback(ScanResult rslt) {
-    setState(() {
-      _camState = false;
-      _qrInfo = rslt.content;
-    });
+  _qrCallback(Iterable<ScanResult> rslt) {
+    if (rslt.isNotEmpty) {
+      setState(() {
+        _camState = false;
+
+        _qrInfo = rslt.first.content;
+      });
+    }
   }
 
   _scanCode() {

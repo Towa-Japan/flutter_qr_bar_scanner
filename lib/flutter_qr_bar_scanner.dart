@@ -89,7 +89,7 @@ class FlutterQrReader {
 
 enum FrameRotation { none, ninetyCC, oneeighty, twoseventyCC }
 
-typedef void QRCodeHandler(ScanResult qr);
+typedef void QRCodeHandler(Iterable<ScanResult> qr);
 
 class QrChannelReader {
   QrChannelReader(this.channel) {
@@ -97,10 +97,10 @@ class QrChannelReader {
       switch (call.method) {
         case 'qrRead':
           if (qrCodeHandler != null) {
-            final args = ScanResult.fromChannelArgs(
-              Map.from(call.arguments),
+            final args = call.arguments as List;
+            qrCodeHandler!(
+              args.map((e) => ScanResult.fromChannelArgs(Map.from(e))),
             );
-            qrCodeHandler!(args);
           }
           break;
         default:
