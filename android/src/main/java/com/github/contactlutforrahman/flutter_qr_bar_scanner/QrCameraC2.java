@@ -26,7 +26,9 @@ import androidx.annotation.RequiresApi;
 
 import com.google.mlkit.vision.common.InputImage;
 
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -238,6 +240,7 @@ class QrCameraC2 implements QrCamera {
                 try {
                     Image image = reader.acquireLatestImage();
                     if (image == null) return;
+                    Log.d(TAG, "frame size: " + image.getWidth() + " x " + image.getHeight());
                     latestFrame = new Frame(image, getFirebaseOrientation());
                     detector.detect(latestFrame);
                 } catch (Throwable t) {
@@ -323,47 +326,19 @@ class QrCameraC2 implements QrCamera {
     private Size getAppropriateSize(Size[] sizes) {
         // assume sizes is never 0
         if (sizes.length == 1) {
+            Log.d(TAG, "selected camera size: " + sizes[0].toString());
             return sizes[0];
         }
 
-        Size s = sizes[0];
-        Size s1 = sizes[1];
+        final int idealWidth = (sensorOrientation % 180 == 0) ? targetWidth : targetHeight;
+        final int idealHeight = (sensorOrientation % 180 == 0) ? targetHeight : targetWidth;
+        Log.d(TAG, "ideal camera size: " + idealWidth + " x " + idealHeight);
 
-        if (s1.getWidth() > s.getWidth() || s1.getHeight() > s.getHeight()) {
-            // ascending
-            if (sensorOrientation % 180 == 0) {
-                for (Size size : sizes) {
-                    s = size;
-                    if (size.getHeight() > targetHeight && size.getWidth() > targetWidth) {
-                        break;
-                    }
-                }
-            } else {
-                for (Size size : sizes) {
-                    s = size;
-                    if (size.getHeight() > targetWidth && size.getWidth() > targetHeight) {
-                        break;
-                    }
-                }
-            }
-        } else {
-            // descending
-            if (sensorOrientation % 180 == 0) {
-                for (Size size : sizes) {
-                    if (size.getHeight() < targetHeight || size.getWidth() < targetWidth) {
-                        break;
-                    }
-                    s = size;
-                }
-            } else {
-                for (Size size : sizes) {
-                    if (size.getHeight() < targetWidth || size.getWidth() < targetHeight) {
-                        break;
-                    }
-                    s = size;
-                }
-            }
-        }
-        return s;
+        Size ret = Arrays.stream(sizes)
+            .filter(s -> s.getHeight() >= idealHeight && s.getWidth() >= idealWidth)
+            .min(Comparator.comparing(s -> s.getHeight() * s.getWidth()))
+            .orElse(sizes[0]);
+        Log.d(TAG, "selected camera size: " + ret.toString());
+        return ret;
     }
 }

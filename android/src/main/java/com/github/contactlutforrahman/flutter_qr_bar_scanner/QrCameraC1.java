@@ -12,6 +12,7 @@ import android.view.WindowManager;
 import com.google.mlkit.vision.common.InputImage;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -118,6 +119,7 @@ class QrCameraC1 implements QrCamera {
 
                     if (data != null) {
 
+                        Log.d(TAG, "frame size: " + previewSize.toString());
                         QrDetector.Frame frame = new Frame(data,
                             previewSize.width, previewSize.height, getFirebaseOrientation(), IMAGEFORMAT);
                         detector.detect(frame);
@@ -196,47 +198,19 @@ class QrCameraC1 implements QrCamera {
     private android.hardware.Camera.Size getAppropriateSize(List<android.hardware.Camera.Size> sizes) {
         // assume sizes is never 0
         if (sizes.size() == 1) {
+            Log.d(TAG, "selected camera size: " + sizes.get(0).toString());
             return sizes.get(0);
         }
 
-        android.hardware.Camera.Size s = sizes.get(0);
-        android.hardware.Camera.Size s1 = sizes.get(1);
+        final int idealWidth = (info.orientation % 180 == 0) ? targetWidth : targetHeight;
+        final int idealHeight = (info.orientation % 180 == 0) ? targetHeight : targetWidth;
+        Log.d(TAG, "ideal camera size: " + idealWidth + " x " + idealHeight);
 
-        if (s1.width > s.width || s1.height > s.height) {
-            // ascending
-            if (info.orientation % 180 == 0) {
-                for (android.hardware.Camera.Size size : sizes) {
-                    s = size;
-                    if (size.height > targetHeight && size.width > targetWidth) {
-                        break;
-                    }
-                }
-            } else {
-                for (android.hardware.Camera.Size size : sizes) {
-                    s = size;
-                    if (size.height > targetWidth && size.width > targetHeight) {
-                        break;
-                    }
-                }
-            }
-        } else {
-            // descending
-            if (info.orientation % 180 == 0) {
-                for (android.hardware.Camera.Size size : sizes) {
-                    if (size.height < targetHeight || size.width < targetWidth) {
-                        break;
-                    }
-                    s = size;
-                }
-            } else {
-                for (android.hardware.Camera.Size size : sizes) {
-                    if (size.height < targetWidth || size.width < targetHeight) {
-                        break;
-                    }
-                    s = size;
-                }
-            }
-        }
-        return s;
+        android.hardware.Camera.Size ret = sizes.stream()
+            .filter(s -> s.height >= idealHeight && s.width >= idealWidth)
+            .min(Comparator.comparing(s -> s.height * s.width))
+            .orElse(sizes.get(0));
+        Log.d(TAG, "selected camera size: " + ret.toString());
+        return ret;
     }
 }
