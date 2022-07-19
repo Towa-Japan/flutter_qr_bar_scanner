@@ -117,9 +117,10 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
 
     switch (widget.fit) {
       case BoxFit.cover:
-        final scale = (displaySize.aspectRatio >= 1)
-            ? displaySize.width / previewSizeResolved.width
-            : displaySize.height / previewSizeResolved.height;
+        final scale =
+            (displaySize.aspectRatio >= previewSizeResolved.aspectRatio)
+                ? displaySize.width / previewSizeResolved.width
+                : displaySize.height / previewSizeResolved.height;
         final offset = Offset(
           (previewSizeResolved.width * scale - displaySize.width) / 2,
           (previewSizeResolved.height * scale - displaySize.height) / 2,
