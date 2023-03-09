@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/rendering.dart';
 
@@ -8,11 +10,14 @@ class ScanResult {
   final Rect bounds;
   final BarcodeFormats? format;
 
-  const ScanResult(this.content, this.bounds, this.format);
+  final Uint8List bytes;
+
+  const ScanResult(this.content, this.bytes, this.bounds, this.format);
 
   ScanResult applyTransform(Rect Function(Rect) transform) {
     return ScanResult(
       this.content,
+      this.bytes,
       transform(this.bounds),
       this.format,
     );
@@ -31,6 +36,7 @@ class ScanResult {
 
     return ScanResult(
       args["content"] as String?,
+      args["bytes"] as Uint8List,
       bounds,
       BarcodeFormats.values.firstWhereOrNull((e) => e.name == format),
     );

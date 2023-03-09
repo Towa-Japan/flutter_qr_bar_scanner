@@ -16,6 +16,10 @@ public class QrBarcode {
         return _barcode.getRawValue();
     }
 
+    public byte[] getBytes() {
+        return _barcode.getRawBytes();
+    }
+
     public Rect getBoundingBox() {
         return _barcode.getBoundingBox();
     }
@@ -28,6 +32,7 @@ public class QrBarcode {
         Map<String, Object> ret = new HashMap<>();
 
         ret.put("content", getContent());
+        ret.put("bytes", getBytes());
         ret.put("format", getFormat().name());
 
         Map<String, Integer> boundingBox = new HashMap<>();
