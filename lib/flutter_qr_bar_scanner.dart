@@ -36,7 +36,7 @@ const _defaultBarcodeFormats = const [
 
 class FlutterQrReader {
   static const MethodChannel _channel = const MethodChannel(
-      'com.github.contactlutforrahman/flutter_qr_bar_scanner');
+      'com.towagifu/flutter_qr_bar_scanner');
   static QrChannelReader channelReader = QrChannelReader(_channel);
 
   //Set target size before starting
