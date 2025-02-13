@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_qr_bar_scanner/barcode_formats.dart';
 import 'package:flutter_qr_bar_scanner/scan_result.dart';
 
 class PreviewDetails {
@@ -10,23 +11,6 @@ class PreviewDetails {
 
   PreviewDetails(int width, int height, this.sensorOrientation, this.textureId)
       : size = Size(width.toDouble(), height.toDouble());
-}
-
-enum BarcodeFormats {
-  ALL_FORMATS,
-  AZTEC,
-  CODE_128,
-  CODE_39,
-  CODE_93,
-  CODABAR,
-  DATA_MATRIX,
-  EAN_13,
-  EAN_8,
-  ITF,
-  PDF417,
-  QR_CODE,
-  UPC_A,
-  UPC_E,
 }
 
 const _defaultBarcodeFormats = const [

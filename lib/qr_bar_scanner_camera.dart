@@ -1,9 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_qr_bar_scanner/barcode_formats.dart';
+import 'package:flutter_qr_bar_scanner/flutter_qr_bar_scanner.dart';
 import 'package:flutter_qr_bar_scanner/scan_result.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
-import 'package:flutter_qr_bar_scanner/flutter_qr_bar_scanner.dart';
+
+export 'package:flutter_qr_bar_scanner/barcode_formats.dart';
+export 'package:flutter_qr_bar_scanner/scan_result.dart';
 
 final WidgetBuilder _defaultNotStartedBuilder =
     (context) => Text("Camera Loading ...");

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_qr_bar_scanner/qr_bar_scanner_camera.dart';
-import 'package:flutter_qr_bar_scanner/scan_result.dart';
 
 void main() {
   runApp(MyApp());

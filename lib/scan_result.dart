@@ -2,8 +2,7 @@ import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/rendering.dart';
-
-import 'flutter_qr_bar_scanner.dart';
+import 'package:flutter_qr_bar_scanner/barcode_formats.dart';
 
 class ScanResult {
   final String? content;
