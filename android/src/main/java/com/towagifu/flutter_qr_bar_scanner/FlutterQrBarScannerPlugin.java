@@ -178,6 +178,13 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
                 }
                 break;
             }
+            case "setTorchState": {
+                if (readingInstance != null && !waitingForPermissionResult) {
+                    readingInstance.reader.qrCamera.setTorchState(methodCall.argument("isOn"));
+                }
+                result.success(null);
+                break;
+            }
             case "stop": {
                 if (readingInstance != null && !waitingForPermissionResult) {
                     stopReader();

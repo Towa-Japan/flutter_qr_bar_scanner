@@ -71,12 +71,17 @@ class QrCameraC2 implements QrCamera {
     private CameraCharacteristics cameraCharacteristics;
     private Frame latestFrame;
 
+    private boolean canToggleTorch;
+    private boolean torchIsOn;
+
     QrCameraC2(int width, int height, SurfaceTexture texture, Context context, QrDetector detector) {
         this.targetWidth = width;
         this.targetHeight = height;
         this.context = context;
         this.texture = texture;
         this.detector = detector;
+        this.canToggleTorch = false;
+        this.torchIsOn = false;
     }
 
     @Override
@@ -154,6 +159,8 @@ class QrCameraC2 implements QrCamera {
             StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             Integer sensorOrientationInteger = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
             sensorOrientation = sensorOrientationInteger == null ? 0 : sensorOrientationInteger;
+
+            canToggleTorch = cameraCharacteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
 
             size = getAppropriateSize(map.getOutputSizes(SurfaceTexture.class));
             jpegSizes = map.getOutputSizes(ImageFormat.JPEG);
@@ -260,7 +267,7 @@ class QrCameraC2 implements QrCamera {
             Integer afMode = afMode(cameraCharacteristics);
 
             previewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-
+            previewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
             if (afMode != null) {
                 previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, afMode);
                 Log.i(TAG, "Setting af mode to: " + afMode);
@@ -283,6 +290,11 @@ class QrCameraC2 implements QrCamera {
                     }
 
                     @Override
+                    public void onReady(@NonNull CameraCaptureSession session) {
+                        startPreview();
+                    }
+
+                    @Override
                     public void onConfigureFailed(@NonNull CameraCaptureSession session) {
                         System.out.println("### Configuration Fail ###");
                     }
@@ -296,31 +308,51 @@ class QrCameraC2 implements QrCamera {
     }
 
     private void startPreview() {
-        CameraCaptureSession.CaptureCallback listener = new CameraCaptureSession.CaptureCallback() {
-            @Override
-            public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-                super.onCaptureCompleted(session, request, result);
-            }
-        };
-
         if (cameraDevice == null) return;
 
         try {
-            previewSession.setRepeatingRequest(previewBuilder.build(), listener, null);
+            previewBuilder.set(
+                CaptureRequest.FLASH_MODE,
+                canToggleTorch && torchIsOn ? CameraMetadata.FLASH_MODE_TORCH : CameraMetadata.FLASH_MODE_OFF
+            );
+            previewSession.setRepeatingRequest(
+                previewBuilder.build(),
+                new CameraCaptureSession.CaptureCallback() {},
+                null
+            );
         } catch (java.lang.Exception e) {
             e.printStackTrace();
         }
     }
 
     @Override
+    public void setTorchState(boolean isOn) {
+        Log.i(TAG, "set torch requested (canToggle: " + canToggleTorch + "): " + torchIsOn + " => " + isOn);
+        if(canToggleTorch) {
+            final boolean curIsOn = torchIsOn;
+            torchIsOn = isOn;
+            if(curIsOn != isOn && previewSession != null) {
+                try {
+                    previewSession.stopRepeating();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @Override
     public void stop() {
+        canToggleTorch = false;
         if (cameraDevice != null) {
             cameraDevice.close();
+            cameraDevice = null;
         }
         if (reader != null) {
             if (latestFrame != null) latestFrame.close();
             latestFrame = null;
             reader.close();
+            reader = null;
         }
     }
 
