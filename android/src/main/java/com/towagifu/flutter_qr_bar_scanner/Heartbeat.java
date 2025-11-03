@@ -1,10 +1,11 @@
 package com.towagifu.flutter_qr_bar_scanner;
 
 import android.os.Handler;
+import android.os.Looper;
 
 public class Heartbeat {
 
-    private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.myLooper());
     private final Runnable runner;
     private final int timeout;
 

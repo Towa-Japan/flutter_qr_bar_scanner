@@ -29,10 +29,14 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 21
     }
     lintOptions {
         disable 'InvalidPackage'
+    }
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += ["-deprecation"]
     }
 }
 
