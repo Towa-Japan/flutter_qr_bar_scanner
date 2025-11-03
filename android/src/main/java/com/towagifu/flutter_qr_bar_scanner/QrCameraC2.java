@@ -12,6 +12,8 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.OutputConfiguration;
+import android.hardware.camera2.params.SessionConfiguration;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -94,12 +96,10 @@ class QrCameraC2 implements QrCamera {
         return sensorOrientation == 270 ? 90 : sensorOrientation;
     }
 
-    private int getFirebaseOrientation() {
-        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        int deviceRotation = windowManager.getDefaultDisplay().getRotation();
+    private int getFrameOrientation() {
+        int deviceRotation = context.getDisplay().getRotation();
         int rotationCompensation = (ORIENTATIONS.get(deviceRotation) + sensorOrientation + 270) % 360;
 
-        // Return the corresponding FirebaseVisionImageMetadata rotation value.
         int result;
         switch (rotationCompensation) {
             case 0:
@@ -225,14 +225,14 @@ class QrCameraC2 implements QrCamera {
     }
 
     private void startCamera() {
-        List<Surface> list = new ArrayList<>();
+        List<OutputConfiguration> outputConfigs = new ArrayList<>();
 
         Size jpegSize = getAppropriateSize(jpegSizes);
 
         final int width = jpegSize.getWidth(), height = jpegSize.getHeight();
         reader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 5);
 
-        list.add(reader.getSurface());
+        outputConfigs.add(new OutputConfiguration(reader.getSurface()));
 
         ImageReader.OnImageAvailableListener imageAvailableListener = new ImageReader.OnImageAvailableListener() {
             @Override
@@ -241,7 +241,7 @@ class QrCameraC2 implements QrCamera {
                     Image image = reader.acquireLatestImage();
                     if (image == null) return;
                     Log.d(TAG, "frame size: " + image.getWidth() + " x " + image.getHeight());
-                    latestFrame = new Frame(image, getFirebaseOrientation());
+                    latestFrame = new Frame(image, getFrameOrientation());
                     detector.detect(latestFrame);
                 } catch (Throwable t) {
                     t.printStackTrace();
@@ -252,11 +252,10 @@ class QrCameraC2 implements QrCamera {
         reader.setOnImageAvailableListener(imageAvailableListener, null);
 
         texture.setDefaultBufferSize(size.getWidth(), size.getHeight());
-        list.add(new Surface(texture));
+        outputConfigs.add(new OutputConfiguration(new Surface(texture)));
         try {
             previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            previewBuilder.addTarget(list.get(0));
-            previewBuilder.addTarget(list.get(1));
+            outputConfigs.forEach((c) -> previewBuilder.addTarget(c.getSurface()));
 
             Integer afMode = afMode(cameraCharacteristics);
 
@@ -272,18 +271,25 @@ class QrCameraC2 implements QrCamera {
         }
 
         try {
-            cameraDevice.createCaptureSession(list, new CameraCaptureSession.StateCallback() {
-                @Override
-                public void onConfigured(@NonNull CameraCaptureSession session) {
-                    previewSession = session;
-                    startPreview();
-                }
+            SessionConfiguration config = new SessionConfiguration(
+                SessionConfiguration.SESSION_REGULAR,
+                outputConfigs,
+                context.getMainExecutor(),
+                new CameraCaptureSession.StateCallback() {
+                    @Override
+                    public void onConfigured(@NonNull CameraCaptureSession session) {
+                        previewSession = session;
+                        startPreview();
+                    }
 
-                @Override
-                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                    System.out.println("### Configuration Fail ###");
+                    @Override
+                    public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                        System.out.println("### Configuration Fail ###");
+                    }
                 }
-            }, null);
+            );
+
+            cameraDevice.createCaptureSession(config);
         } catch (Throwable t) {
             t.printStackTrace();
         }
