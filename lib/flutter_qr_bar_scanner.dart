@@ -58,6 +58,13 @@ class FlutterQrReader {
     return PreviewDetails(surfaceWidth, surfaceHeight, orientation, textureId);
   }
 
+  static Future setTorchState(bool isOn) {
+    return _channel.invokeMethod(
+      'setTorchState',
+      {'isOn': isOn},
+    ).catchError(print);
+  }
+
   static Future stop() {
     channelReader.setQrCodeHandler(null);
     return _channel.invokeMethod('stop').catchError(print);

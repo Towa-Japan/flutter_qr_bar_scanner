@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_qr_bar_scanner/barcode_formats.dart';
 import 'package:flutter_qr_bar_scanner/flutter_qr_bar_scanner.dart';
 import 'package:flutter_qr_bar_scanner/scan_result.dart';
+import 'package:flutter_qr_bar_scanner/torch_state_controller.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 
 export 'package:flutter_qr_bar_scanner/barcode_formats.dart';
@@ -30,10 +31,12 @@ class QRBarScannerCamera extends StatefulWidget {
     WidgetBuilder? offscreenBuilder,
     ErrorCallback? onError,
     this.formats,
+    TorchStateController? torchController,
   })  : notStartedBuilder = notStartedBuilder ?? _defaultNotStartedBuilder,
         offscreenBuilder =
             offscreenBuilder ?? notStartedBuilder ?? _defaultOffscreenBuilder,
         onError = onError ?? _defaultOnError,
+        torchController = torchController ?? TorchStateController(),
         super(key: key);
 
   final BoxFit fit;
@@ -43,6 +46,7 @@ class QRBarScannerCamera extends StatefulWidget {
   final WidgetBuilder offscreenBuilder;
   final ErrorCallback onError;
   final List<BarcodeFormats>? formats;
+  final TorchStateController torchController;
 
   @override
   QRBarScannerCameraState createState() => QRBarScannerCameraState();
@@ -54,10 +58,12 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.torchController.notifier.addListener(_setTorchState);
   }
 
   @override
   dispose() {
+    widget.torchController.notifier.removeListener(_setTorchState);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -82,17 +88,26 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
   Orientation? _deviceOrientation;
   PreviewDetails? _previewDetails;
 
+  Future<void> _setTorchState() async {
+    bool isOn = widget.torchController.isOn;
+    await FlutterQrReader.setTorchState(isOn);
+  }
+
   Future<PreviewDetails> _asyncInit(num width, num height) async {
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     assert(widget.fit == BoxFit.cover);
 
-    return await FlutterQrReader.start(
+    final ret = await FlutterQrReader.start(
       width: (devicePixelRatio * width.toInt()).ceil(),
       height: (devicePixelRatio * height.toInt()).ceil(),
       qrCodeHandler: widget.qrCodeCallback,
       transformBuilder: _transformBuilder,
       formats: widget.formats,
     );
+
+    await _setTorchState();
+
+    return ret;
   }
 
   Rect Function(Rect) _transformBuilder() {
