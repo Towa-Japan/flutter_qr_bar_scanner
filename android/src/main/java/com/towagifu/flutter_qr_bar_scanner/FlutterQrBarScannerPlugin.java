@@ -28,7 +28,6 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.view.TextureRegistry;
 
 
@@ -47,29 +46,28 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
     private boolean waitingForPermissionResult;
     private boolean permissionDenied;
     private ReadingInstance readingInstance;
-    private FlutterPluginBinding flutterPluginBinding;
-
-    /**
-     * Plugin registration.
-     */
-    public static void registerWith(Registrar registrar) {
-        FlutterQrBarScannerPlugin plugin = new FlutterQrBarScannerPlugin();
-        plugin.performV1Registration(registrar);
-    }
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
-        flutterPluginBinding = binding;
+        Log.i(TAG, "Plugin Registration being performed: flutterPluginBinding " + binding);
+
+        textures = binding.getTextureRegistry();
+        channel = new MethodChannel(binding.getBinaryMessenger(), "com.towagifu/flutter_qr_bar_scanner");
+        channel.setMethodCallHandler(this);
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        flutterPluginBinding = null;
+        if(channel != null) {
+            channel.setMethodCallHandler(null);
+            textures = null;
+            channel = null;
+        }
     }
 
     @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
-        performV2Registration(flutterPluginBinding, binding);
+        attachToActivity(binding);
     }
 
     @Override
@@ -79,44 +77,19 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
 
     @Override
     public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
-        onAttachedToActivity(binding);
+        attachToActivity(binding);
     }
 
     @Override
     public void onDetachedFromActivity() {
-        channel.setMethodCallHandler(null);
-        channel = null;
+        activity = null;
     }
 
-    private void performV1Registration(Registrar registrar) {
-        performRegistration(true, registrar, null, null);
-    }
+    private void attachToActivity(ActivityPluginBinding binding) {
+        Log.i(TAG, "Attaching to activity: activityPluginBinding " + binding);
 
-    private void performV2Registration(FlutterPluginBinding flutterPluginBinding, ActivityPluginBinding activityPluginBinding) {
-        performRegistration(false, null, flutterPluginBinding, activityPluginBinding);
-    }
-
-    private void performRegistration(boolean isVersion1Embedding, Registrar registrar, FlutterPluginBinding flutterPluginBinding, ActivityPluginBinding activityPluginBinding) {
-        Log.i(TAG, "Plugin Registration being performed: " +
-            "isVersion1Embedding " + isVersion1Embedding +
-            ", registrar " + registrar +
-            ", flutterPluginBinding " + flutterPluginBinding +
-            ", activityPluginBinding " + activityPluginBinding);
-
-        BinaryMessenger messenger;
-        if (isVersion1Embedding) {
-            messenger = registrar.messenger();
-            activity = registrar.activity();
-            textures = registrar.textures();
-            registrar.addRequestPermissionsResultListener(this);
-        } else {
-            messenger = flutterPluginBinding.getBinaryMessenger();
-            activity = activityPluginBinding.getActivity();
-            textures = flutterPluginBinding.getTextureRegistry();
-            activityPluginBinding.addRequestPermissionsResultListener(this);
-        }
-        channel = new MethodChannel(messenger, "com.towagifu/flutter_qr_bar_scanner");
-        channel.setMethodCallHandler(this);
+        activity = binding.getActivity();
+        binding.addRequestPermissionsResultListener(this);
     }
 
     @Override
@@ -152,6 +125,16 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
 
     @Override
     public void onMethodCall(MethodCall methodCall, Result result) {
+        if(textures == null) {
+            result.error("ENGINE_ERROR", "not attached to engine", null);
+            return;
+        }
+
+        if(activity == null) {
+            result.error("ACTIVITY_ERROR", "not attached to activity", null);
+            return;
+        }
+
         switch (methodCall.method) {
             case "start": {
                 if (permissionDenied) {
