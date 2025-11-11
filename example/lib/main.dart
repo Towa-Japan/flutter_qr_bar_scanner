@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_qr_bar_scanner/qr_bar_scanner_camera.dart';
+import 'package:flutter_qr_bar_scanner/scanner_camera.dart';
 import 'package:flutter_qr_bar_scanner/torch_state_controller.dart';
 
 void main() {
@@ -60,7 +60,7 @@ class _MyAppState extends State<MyApp> {
                   child: GestureDetector(
                     onTap: () => _torchStateController.isOn =
                         !_torchStateController.isOn,
-                    child: QRBarScannerCamera(
+                    child: ScannerCamera(
                       torchController: _torchStateController,
                       onError: (context, error) => Text(
                         error.toString(),

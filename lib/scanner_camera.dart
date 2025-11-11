@@ -21,8 +21,8 @@ final ErrorCallback _defaultOnError = (BuildContext context, Object? error) {
 
 typedef Widget ErrorCallback(BuildContext context, Object? error);
 
-class QRBarScannerCamera extends StatefulWidget {
-  QRBarScannerCamera({
+class ScannerCamera extends StatefulWidget {
+  ScannerCamera({
     Key? key,
     required this.qrCodeCallback,
     this.child,
@@ -49,10 +49,10 @@ class QRBarScannerCamera extends StatefulWidget {
   final TorchStateController torchController;
 
   @override
-  QRBarScannerCameraState createState() => QRBarScannerCameraState();
+  _ScannerCameraState createState() => _ScannerCameraState();
 }
 
-class QRBarScannerCameraState extends State<QRBarScannerCamera>
+class _ScannerCameraState extends State<ScannerCamera>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -225,8 +225,6 @@ class QRBarScannerCameraState extends State<QRBarScannerCamera>
                       height: constraints.maxHeight,
                       child: Preview(
                         previewDetails: details.data!,
-                        targetWidth: constraints.maxWidth,
-                        targetHeight: constraints.maxHeight,
                         fit: widget.fit,
                       ),
                     );
@@ -282,15 +280,12 @@ int _getRotationCompensation(
 
 class Preview extends StatelessWidget {
   final Size size;
-  final double targetWidth, targetHeight;
   final int textureId;
   final int sensorOrientation;
   final BoxFit fit;
 
   Preview({
     required PreviewDetails previewDetails,
-    required this.targetWidth,
-    required this.targetHeight,
     required this.fit,
   })  : textureId = previewDetails.textureId,
         size = previewDetails.size.flipped,
