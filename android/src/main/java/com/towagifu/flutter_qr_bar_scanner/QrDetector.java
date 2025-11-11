@@ -18,7 +18,6 @@ import java.util.List;
 /**
  * Allows QrCamera classes to send frames to a Detector
  */
-
 class QrDetector implements OnSuccessListener<List<Barcode>>, OnFailureListener {
     private static final String TAG = FlutterQrBarScannerPlugin.LOG_TAG_PREFIX + QrDetector.class.getSimpleName();
     private final QrReaderCallbacks communicator;

@@ -8,7 +8,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
-
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.view.TextureRegistry;
-
 
 /**
  * FlutterQrBarScannerPlugin

@@ -47,7 +47,6 @@ import static android.hardware.camera2.CameraMetadata.LENS_FACING_BACK;
 @TargetApi(21)
 @RequiresApi(21)
 class QrCameraC2 implements QrCamera {
-
     private static final String TAG = FlutterQrBarScannerPlugin.LOG_TAG_PREFIX + QrCameraC2.class.getSimpleName();
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 
@@ -190,7 +189,6 @@ class QrCameraC2 implements QrCamera {
     }
 
     private Integer afMode(CameraCharacteristics cameraCharacteristics) {
-
         int[] afModes = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
 
         if (afModes == null) {
@@ -213,7 +211,7 @@ class QrCameraC2 implements QrCamera {
         }
     }
 
-    static int getLensFacing(CameraOrientation orientation) {
+    private static int getLensFacing(CameraOrientation orientation) {
         switch (orientation) {
             case AWAY_FROM_USER:
                 return LENS_FACING_BACK;
@@ -242,7 +240,6 @@ class QrCameraC2 implements QrCamera {
         public void close() {
             image.close();
         }
-
     }
 
     private void startCamera() {

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 public enum BarcodeFormats {
-
     ALL_FORMATS(Barcode.FORMAT_ALL_FORMATS),
     CODE_128(Barcode.FORMAT_CODE_128),
     CODE_39(Barcode.FORMAT_CODE_39),
@@ -92,7 +91,6 @@ public enum BarcodeFormats {
             rest[i++] = e;
         }
 
-
         return new BarcodeScannerOptions.Builder()
             .setBarcodeFormats(first, rest).build();
     }
@@ -105,5 +103,4 @@ public enum BarcodeFormats {
         }
         throw new NoSuchElementException();
     }
-
 }

@@ -4,7 +4,6 @@ import android.os.Handler;
 import android.os.Looper;
 
 public class Heartbeat {
-
     private final Handler handler = new Handler(Looper.myLooper());
     private final Runnable runner;
     private final int timeout;
@@ -24,5 +23,4 @@ public class Heartbeat {
     public void stop() {
         handler.removeCallbacks(runner);
     }
-
 }
