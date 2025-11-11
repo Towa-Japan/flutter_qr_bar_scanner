@@ -79,11 +79,6 @@ class FlutterQrReader {
   static Future heartbeat() {
     return _channel.invokeMethod('heartbeat').catchError(print);
   }
-
-  static Future<List<List<int>>?> getSupportedSizes() {
-    return _channel.invokeMethod('getSupportedSizes').catchError(print)
-        as Future<List<List<int>>?>;
-  }
 }
 
 enum FrameRotation { none, ninetyCC, oneeighty, twoseventyCC }
