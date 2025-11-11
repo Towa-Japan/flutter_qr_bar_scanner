@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_qr_bar_scanner/barcode_formats.dart';
+import 'package:flutter_qr_bar_scanner/camera_orientation.dart';
 import 'package:flutter_qr_bar_scanner/scan_result.dart';
 
 class PreviewDetails {
@@ -18,8 +20,8 @@ const _defaultBarcodeFormats = const [
 ];
 
 class FlutterQrReader {
-  static const MethodChannel _channel = const MethodChannel(
-      'com.towagifu/flutter_qr_bar_scanner');
+  static const MethodChannel _channel =
+      const MethodChannel('com.towagifu/flutter_qr_bar_scanner');
   static QrChannelReader channelReader = QrChannelReader(_channel);
 
   //Set target size before starting
@@ -28,12 +30,14 @@ class FlutterQrReader {
     required int height,
     required Rect Function(Rect) Function() transformBuilder,
     required QRCodeHandler qrCodeHandler,
-    List<BarcodeFormats>? formats = _defaultBarcodeFormats,
+    List<BarcodeFormats>? formats,
+    CameraOrientation cameraOrientation = CameraOrientation.awayFromUser,
   }) async {
-    final _formats = formats ?? _defaultBarcodeFormats;
-    assert(_formats.length > 0);
+    developer.log('$width x $height $cameraOrientation ($formats)', name: 'FlutterQrReader');
+    final formatsResolved = formats ?? _defaultBarcodeFormats;
+    assert(formatsResolved.length > 0);
 
-    List<String> formatStrings = _formats
+    List<String> formatStrings = formatsResolved
         .map((format) => format.toString().split('.')[1])
         .toList(growable: false);
 
@@ -42,20 +46,22 @@ class FlutterQrReader {
       'targetHeight': height,
       'heartbeatTimeout': 0,
       'formats': formatStrings,
+      'orientation': cameraOrientation.name,
     });
 
     // invokeMethod returns Map<dynamic,...> in dart 2.0
     assert(details is Map<dynamic, dynamic>);
 
     int textureId = details["textureId"];
-    int orientation = details["surfaceOrientation"];
+    int surfaceOrientation = details["surfaceOrientation"];
     int surfaceHeight = details["surfaceHeight"];
     int surfaceWidth = details["surfaceWidth"];
 
     channelReader.setTransformBuilder(transformBuilder);
     channelReader.setQrCodeHandler(qrCodeHandler);
 
-    return PreviewDetails(surfaceWidth, surfaceHeight, orientation, textureId);
+    return PreviewDetails(
+        surfaceWidth, surfaceHeight, surfaceOrientation, textureId);
   }
 
   static Future setTorchState(bool isOn) {
