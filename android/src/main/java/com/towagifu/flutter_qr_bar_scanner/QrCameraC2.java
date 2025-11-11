@@ -323,7 +323,7 @@ class QrCameraC2 implements QrCamera {
 
     private void startPreview() {
         if (cameraDevice == null) return;
-
+        Log.d(TAG, "start preview (canToggleTorch: " + canToggleTorch + "): torchIsOn = " + torchIsOn);
         try {
             previewBuilder.set(
                 CaptureRequest.FLASH_MODE,
