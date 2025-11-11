@@ -1,5 +1,5 @@
-group 'com.towagifu.flutter_qr_bar_scanner'
-version '1.0'
+group = 'com.towagifu.flutter_qr_bar_scanner'
+version = '1.0'
 
 buildscript {
     repositories {
@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath 'com.android.tools.build:gradle:8.9.1'
     }
 }
 
@@ -19,7 +19,7 @@ rootProject.allprojects {
     }
 }
 
-apply plugin: 'com.android.library'
+apply plugin: "com.android.library"
 
 android {
     if (project.android.hasProperty("namespace")) {
@@ -28,11 +28,13 @@ android {
 
     compileSdkVersion 31
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
     defaultConfig {
         minSdkVersion 21
-    }
-    lintOptions {
-        disable 'InvalidPackage'
     }
 
     tasks.withType(JavaCompile) {

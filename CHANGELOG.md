@@ -1,3 +1,15 @@
+## [4.1.1] - 2025/11/11
+
+* Feature: allow for turning on/off light #4
+* Feature: Allow for specifying camera orientation #5
+* Change: bump min android sdk version to 21 #4
+* Internal: log additions #4 #5
+* Internal: remove deprecated API usages #4
+* Environment: set gradle output to use utf-8 #4
+
+* __breaking__ Change: `QRBarScannerCamera` rename to `ScannerCamera` #5
+* __breaking__ Deletion: `FlutterQrReader.getSupportedSizes()` deleted because it is not implemented #5
+
 ## [4.0.0] - 2025/2/3
 
 * upgraded flutter to 3.24.5
