@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_qr_bar_scanner/scanner_camera.dart';
-import 'package:flutter_qr_bar_scanner/torch_state_controller.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,7 +13,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String? _qrInfo = 'Scan a QR/Bar code';
   bool _camState = false;
-  late TorchStateController _torchStateController;
+  late CameraStateController _cameraController;
 
   _qrCallback(Iterable<ScanResult> rslt) {
     if (rslt.isNotEmpty) {
@@ -35,13 +34,13 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _torchStateController = TorchStateController(isOn: true);
+    _cameraController = CameraStateController();
     _scanCode();
   }
 
   @override
   void dispose() {
-    _torchStateController.dispose();
+    _cameraController.dispose();
     super.dispose();
   }
 
@@ -58,10 +57,15 @@ class _MyAppState extends State<MyApp> {
                   height: 1000,
                   width: 500,
                   child: GestureDetector(
-                    onTap: () => _torchStateController.isOn =
-                        !_torchStateController.isOn,
+                    onTap: () =>
+                        _cameraController.isTorchOn = !_cameraController.isTorchOn,
+                    onLongPress: () => _cameraController.orientation =
+                        (_cameraController.orientation ==
+                                CameraOrientation.awayFromUser
+                            ? CameraOrientation.towardsUser
+                            : CameraOrientation.awayFromUser),
                     child: ScannerCamera(
-                      torchController: _torchStateController,
+                      cameraController: _cameraController,
                       onError: (context, error) => Text(
                         error.toString(),
                         style: TextStyle(color: Colors.red),
