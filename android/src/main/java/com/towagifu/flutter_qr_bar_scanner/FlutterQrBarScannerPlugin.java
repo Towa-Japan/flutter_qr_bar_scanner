@@ -147,6 +147,7 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
                     Integer targetWidth = methodCall.argument("targetWidth");
                     Integer targetHeight = methodCall.argument("targetHeight");
                     List<String> formatStrings = methodCall.argument("formats");
+                    CameraOrientation orientation = CameraOrientation.parse(methodCall.argument("orientation"));
 
                     if (targetWidth == null || targetHeight == null) {
                         result.error("INVALID_ARGUMENT", "Missing a required argument", "Expecting targetWidth, targetHeight, and optionally heartbeatTimeout");
@@ -162,7 +163,8 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
                     readingInstance = new ReadingInstance(reader, textureEntry, result);
                     try {
                         reader.start(
-                            lastHeartbeatTimeout == null ? 0 : lastHeartbeatTimeout
+                            lastHeartbeatTimeout == null ? 0 : lastHeartbeatTimeout,
+                            orientation
                         );
                     } catch (IOException e) {
                         e.printStackTrace();

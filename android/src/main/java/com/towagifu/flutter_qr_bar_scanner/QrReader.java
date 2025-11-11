@@ -35,19 +35,8 @@ class QrReader {
         }
     }
 
-    void start(final int heartBeatTimeout) throws IOException, NoPermissionException, Exception {
-        if (!hasCameraHardware(context)) {
-            throw new Exception(Exception.Reason.noHardware);
-        }
-
-        if (!checkCameraPermission(context)) {
-            throw new NoPermissionException();
-        } else {
-            continueStarting(heartBeatTimeout);
-        }
-    }
-
-    private void continueStarting(int heartBeatTimeout) throws IOException {
+    void start(final int heartBeatTimeout, final CameraOrientation orientation) throws IOException, NoPermissionException, Exception {
+        checkStartConditions();
         try {
             if (heartBeatTimeout > 0) {
                 if (heartbeat != null) {
@@ -61,10 +50,20 @@ class QrReader {
                 });
             }
 
-            qrCamera.start();
+            qrCamera.start(orientation);
             startedCallback.started();
         } catch (Throwable t) {
             startedCallback.startingFailed(t);
+        }
+    }
+
+    private void checkStartConditions() throws NoPermissionException, Exception {
+        if (!hasCameraHardware(context)) {
+            throw new Exception(Exception.Reason.noHardware);
+        }
+
+        if (!hasCameraPermissions(context)) {
+            throw new NoPermissionException();
         }
     }
 
@@ -93,7 +92,7 @@ class QrReader {
         }
     }
 
-    private boolean checkCameraPermission(Context context) {
+    private boolean hasCameraPermissions(Context context) {
         String[] permissions = {Manifest.permission.CAMERA};
 
         int res = context.checkCallingOrSelfPermission(permissions[0]);
@@ -121,7 +120,7 @@ class QrReader {
         enum Reason {
             noHardware,
             noPermissions,
-            noBackCamera
+            noMatchingCamera
         }
     }
 }

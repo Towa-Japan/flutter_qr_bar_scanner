@@ -1,0 +1,4 @@
+enum CameraOrientation {
+  awayFromUser,
+  towardsUser,
+}

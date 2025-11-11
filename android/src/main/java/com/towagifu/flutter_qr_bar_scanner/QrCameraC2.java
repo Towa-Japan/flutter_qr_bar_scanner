@@ -33,10 +33,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_AUTO;
 import static android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE;
 import static android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO;
+import static android.hardware.camera2.CameraMetadata.LENS_FACING_FRONT;
 import static android.hardware.camera2.CameraMetadata.LENS_FACING_BACK;
 
 /**
@@ -127,7 +129,7 @@ class QrCameraC2 implements QrCamera {
     }
 
     @Override
-    public void start() throws QrReader.Exception {
+    public void start(final CameraOrientation orientation) throws QrReader.Exception {
         CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
 
         if (manager == null) {
@@ -137,21 +139,22 @@ class QrCameraC2 implements QrCamera {
         String cameraId = null;
         try {
             String[] cameraIdList = manager.getCameraIdList();
+            final int requestedFacing = getLensFacing(orientation);
             for (String id : cameraIdList) {
                 CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(id);
-                Integer integer = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
-                if (integer != null && integer == LENS_FACING_BACK) {
+                Integer lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
+                if (lensFacing != null && lensFacing == requestedFacing) {
                     cameraId = id;
                     break;
                 }
             }
         } catch (CameraAccessException e) {
-            Log.w(TAG, "Error getting back camera.", e);
+            Log.w(TAG, "Error getting camera: " + orientation.name(), e);
             throw new RuntimeException(e);
         }
 
         if (cameraId == null) {
-            throw new QrReader.Exception(QrReader.Exception.Reason.noBackCamera);
+            throw new QrReader.Exception(QrReader.Exception.Reason.noMatchingCamera);
         }
 
         try {
@@ -207,6 +210,17 @@ class QrCameraC2 implements QrCamera {
             return CONTROL_AF_MODE_AUTO;
         } else {
             return null;
+        }
+    }
+
+    static int getLensFacing(CameraOrientation orientation) {
+        switch (orientation) {
+            case AWAY_FROM_USER:
+                return LENS_FACING_BACK;
+            case TOWARDS_USER:
+                return LENS_FACING_FRONT;
+            default:
+                throw new NoSuchElementException(orientation.name());
         }
     }
 
@@ -309,7 +323,7 @@ class QrCameraC2 implements QrCamera {
 
     private void startPreview() {
         if (cameraDevice == null) return;
-
+        Log.d(TAG, "start preview (canToggleTorch: " + canToggleTorch + "): torchIsOn = " + torchIsOn);
         try {
             previewBuilder.set(
                 CaptureRequest.FLASH_MODE,
