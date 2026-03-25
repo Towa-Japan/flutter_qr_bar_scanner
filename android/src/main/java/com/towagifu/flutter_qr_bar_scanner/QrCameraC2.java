@@ -13,7 +13,6 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.OutputConfiguration;
-import android.hardware.camera2.params.SessionConfiguration;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -290,10 +289,8 @@ class QrCameraC2 implements QrCamera {
         }
 
         try {
-            SessionConfiguration config = new SessionConfiguration(
-                SessionConfiguration.SESSION_REGULAR,
+            cameraDevice.createCaptureSessionByOutputConfigurations(
                 outputConfigs,
-                context.getMainExecutor(),
                 new CameraCaptureSession.StateCallback() {
                     @Override
                     public void onConfigured(@NonNull CameraCaptureSession session) {
@@ -310,10 +307,9 @@ class QrCameraC2 implements QrCamera {
                     public void onConfigureFailed(@NonNull CameraCaptureSession session) {
                         System.out.println("### Configuration Fail ###");
                     }
-                }
+                },
+                null
             );
-
-            cameraDevice.createCaptureSession(config);
         } catch (Throwable t) {
             t.printStackTrace();
         }
