@@ -103,7 +103,8 @@ class QrCameraC2 implements QrCamera {
     }
 
     private int getFrameOrientation() {
-        int deviceRotation = context.getDisplay().getRotation();
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        int deviceRotation = windowManager.getDefaultDisplay().getRotation();
         int rotationCompensation = (ORIENTATIONS.get(deviceRotation) + sensorOrientation + 270) % 360;
 
         int result;
