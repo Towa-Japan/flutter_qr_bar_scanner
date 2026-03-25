@@ -1,3 +1,9 @@
+## [4.1.2] - 2026/03/25
+- Fix: exception on Android 8.1 (API level 27) #6
+- Fix: native_device_orientation updates cause build errors so fixing version for now #6
+- Feature: example program UI improvements (tapping screen after reading barcode allows for successive reading) #6
+- Internal: added Java formatting #6
+
 ## [4.1.1] - 2025/11/11
 
 * Feature: allow for turning on/off light #4
