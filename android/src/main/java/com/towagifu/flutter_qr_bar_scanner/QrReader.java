@@ -20,13 +20,15 @@ class QrReader {
     private final QRReaderStartedCallback startedCallback;
     private Heartbeat heartbeat;
 
-    QrReader(int width, int height, Activity context, BarcodeScannerOptions options,
-             final QRReaderStartedCallback startedCallback, final QrReaderCallbacks communicator,
-             final SurfaceTexture texture) {
+    QrReader(
+        int width, int height, Activity context, BarcodeScannerOptions options,
+        final QRReaderStartedCallback startedCallback, final QrReaderCallbacks communicator,
+        final SurfaceTexture texture
+    ) {
         this.context = context;
         this.startedCallback = startedCallback;
 
-        if (android.os.Build.VERSION.SDK_INT >= 21) {
+        if(android.os.Build.VERSION.SDK_INT >= 21) {
             Log.i(TAG, "Using new camera API.");
             qrCamera = new QrCameraC2(width, height, texture, context, new QrDetector(communicator, options));
         } else {
@@ -35,11 +37,13 @@ class QrReader {
         }
     }
 
-    void start(final int heartBeatTimeout, final CameraOrientation orientation) throws IOException, NoPermissionException, Exception {
+    void start(final int heartBeatTimeout, final CameraOrientation orientation)
+        throws IOException, NoPermissionException, Exception
+    {
         checkStartConditions();
         try {
-            if (heartBeatTimeout > 0) {
-                if (heartbeat != null) {
+            if(heartBeatTimeout > 0) {
+                if(heartbeat != null) {
                     heartbeat.stop();
                 }
                 heartbeat = new Heartbeat(heartBeatTimeout, new Runnable() {
@@ -52,23 +56,23 @@ class QrReader {
 
             qrCamera.start(orientation);
             startedCallback.started();
-        } catch (Throwable t) {
+        } catch(Throwable t) {
             startedCallback.startingFailed(t);
         }
     }
 
     private void checkStartConditions() throws NoPermissionException, Exception {
-        if (!hasCameraHardware(context)) {
+        if(!hasCameraHardware(context)) {
             throw new Exception(Exception.Reason.noHardware);
         }
 
-        if (!hasCameraPermissions(context)) {
+        if(!hasCameraPermissions(context)) {
             throw new NoPermissionException();
         }
     }
 
     void stop() {
-        if (heartbeat != null) {
+        if(heartbeat != null) {
             heartbeat.stop();
         }
 
@@ -76,13 +80,13 @@ class QrReader {
     }
 
     void heartBeat() {
-        if (heartbeat != null) {
+        if(heartbeat != null) {
             heartbeat.beat();
         }
     }
 
     private boolean hasCameraHardware(Context context) {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+        if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
         } else {
             @SuppressLint("UnsupportedChromeOsCameraSystemFeature")
@@ -93,7 +97,9 @@ class QrReader {
     }
 
     private boolean hasCameraPermissions(Context context) {
-        String[] permissions = {Manifest.permission.CAMERA};
+        String[] permissions = {
+            Manifest.permission.CAMERA
+        };
 
         int res = context.checkCallingOrSelfPermission(permissions[0]);
         return res == PackageManager.PERMISSION_GRANTED;

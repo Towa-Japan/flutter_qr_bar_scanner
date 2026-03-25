@@ -96,18 +96,18 @@ class QrCameraC2 implements QrCamera {
 
     @Override
     public int getOrientation() {
-        // ignore sensor orientation of devices with 'reverse landscape' orientation of sensor
-        // as camera2 api seems to already rotate the output.
+        // ignore sensor orientation of devices with 'reverse landscape' orientation of
+        // sensor as camera2 api seems to already rotate the output.
         return sensorOrientation == 270 ? 90 : sensorOrientation;
     }
 
     private int getFrameOrientation() {
-        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
         int deviceRotation = windowManager.getDefaultDisplay().getRotation();
         int rotationCompensation = (ORIENTATIONS.get(deviceRotation) + sensorOrientation + 270) % 360;
 
         int result;
-        switch (rotationCompensation) {
+        switch(rotationCompensation) {
             case 0:
                 result = 0;
                 break;
@@ -129,9 +129,9 @@ class QrCameraC2 implements QrCamera {
 
     @Override
     public void start(final CameraOrientation orientation) throws QrReader.Exception {
-        CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager)context.getSystemService(Context.CAMERA_SERVICE);
 
-        if (manager == null) {
+        if(manager == null) {
             throw new RuntimeException("Unable to get camera manager.");
         }
 
@@ -139,26 +139,27 @@ class QrCameraC2 implements QrCamera {
         try {
             String[] cameraIdList = manager.getCameraIdList();
             final int requestedFacing = getLensFacing(orientation);
-            for (String id : cameraIdList) {
+            for(String id : cameraIdList) {
                 CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(id);
                 Integer lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
-                if (lensFacing != null && lensFacing == requestedFacing) {
+                if(lensFacing != null && lensFacing == requestedFacing) {
                     cameraId = id;
                     break;
                 }
             }
-        } catch (CameraAccessException e) {
+        } catch(CameraAccessException e) {
             Log.w(TAG, "Error getting camera: " + orientation.name(), e);
             throw new RuntimeException(e);
         }
 
-        if (cameraId == null) {
+        if(cameraId == null) {
             throw new QrReader.Exception(QrReader.Exception.Reason.noMatchingCamera);
         }
 
         try {
             cameraCharacteristics = manager.getCameraCharacteristics(cameraId);
-            StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            StreamConfigurationMap map = cameraCharacteristics
+                .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             Integer sensorOrientationInteger = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
             sensorOrientation = sensorOrientationInteger == null ? 0 : sensorOrientationInteger;
 
@@ -183,7 +184,7 @@ class QrCameraC2 implements QrCamera {
                     Log.w(TAG, "Error opening camera: " + error);
                 }
             }, null);
-        } catch (CameraAccessException e) {
+        } catch(CameraAccessException e) {
             Log.w(TAG, "Error getting camera configuration.", e);
         }
     }
@@ -191,20 +192,20 @@ class QrCameraC2 implements QrCamera {
     private Integer afMode(CameraCharacteristics cameraCharacteristics) {
         int[] afModes = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
 
-        if (afModes == null) {
+        if(afModes == null) {
             return null;
         }
 
         HashSet<Integer> modes = new HashSet<>(afModes.length * 2);
-        for (int afMode : afModes) {
+        for(int afMode : afModes) {
             modes.add(afMode);
         }
 
-        if (modes.contains(CONTROL_AF_MODE_CONTINUOUS_VIDEO)) {
+        if(modes.contains(CONTROL_AF_MODE_CONTINUOUS_VIDEO)) {
             return CONTROL_AF_MODE_CONTINUOUS_VIDEO;
-        } else if (modes.contains(CONTROL_AF_MODE_CONTINUOUS_PICTURE)) {
+        } else if(modes.contains(CONTROL_AF_MODE_CONTINUOUS_PICTURE)) {
             return CONTROL_AF_MODE_CONTINUOUS_PICTURE;
-        } else if (modes.contains(CONTROL_AF_MODE_AUTO)) {
+        } else if(modes.contains(CONTROL_AF_MODE_AUTO)) {
             return CONTROL_AF_MODE_AUTO;
         } else {
             return null;
@@ -212,7 +213,7 @@ class QrCameraC2 implements QrCamera {
     }
 
     private static int getLensFacing(CameraOrientation orientation) {
-        switch (orientation) {
+        switch(orientation) {
             case AWAY_FROM_USER:
                 return LENS_FACING_BACK;
             case TOWARDS_USER:
@@ -257,11 +258,13 @@ class QrCameraC2 implements QrCamera {
             public void onImageAvailable(ImageReader reader) {
                 try {
                     Image image = reader.acquireLatestImage();
-                    if (image == null) return;
+                    if(image == null) {
+                        return;
+                    }
                     Log.d(TAG, "frame size: " + image.getWidth() + " x " + image.getHeight());
                     latestFrame = new Frame(image, getFrameOrientation());
                     detector.detect(latestFrame);
-                } catch (Throwable t) {
+                } catch(Throwable t) {
                     t.printStackTrace();
                 }
             }
@@ -279,11 +282,11 @@ class QrCameraC2 implements QrCamera {
 
             previewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             previewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
-            if (afMode != null) {
+            if(afMode != null) {
                 previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, afMode);
                 Log.i(TAG, "Setting af mode to: " + afMode);
             }
-        } catch (java.lang.Exception e) {
+        } catch(java.lang.Exception e) {
             e.printStackTrace();
             return;
         }
@@ -310,13 +313,15 @@ class QrCameraC2 implements QrCamera {
                 },
                 null
             );
-        } catch (Throwable t) {
+        } catch(Throwable t) {
             t.printStackTrace();
         }
     }
 
     private void startPreview() {
-        if (cameraDevice == null) return;
+        if(cameraDevice == null) {
+            return;
+        }
         Log.d(TAG, "start preview (canToggleTorch: " + canToggleTorch + "): torchIsOn = " + torchIsOn);
         try {
             previewBuilder.set(
@@ -328,7 +333,7 @@ class QrCameraC2 implements QrCamera {
                 new CameraCaptureSession.CaptureCallback() {},
                 null
             );
-        } catch (java.lang.Exception e) {
+        } catch(java.lang.Exception e) {
             e.printStackTrace();
         }
     }
@@ -342,7 +347,7 @@ class QrCameraC2 implements QrCamera {
             if(curIsOn != isOn && previewSession != null) {
                 try {
                     previewSession.stopRepeating();
-                } catch (Throwable t) {
+                } catch(Throwable t) {
                     t.printStackTrace();
                 }
             }
@@ -352,12 +357,14 @@ class QrCameraC2 implements QrCamera {
     @Override
     public void stop() {
         canToggleTorch = false;
-        if (cameraDevice != null) {
+        if(cameraDevice != null) {
             cameraDevice.close();
             cameraDevice = null;
         }
-        if (reader != null) {
-            if (latestFrame != null) latestFrame.close();
+        if(reader != null) {
+            if(latestFrame != null) {
+                latestFrame.close();
+            }
             latestFrame = null;
             reader.close();
             reader = null;
@@ -366,7 +373,7 @@ class QrCameraC2 implements QrCamera {
 
     private Size getAppropriateSize(Size[] sizes) {
         // assume sizes is never 0
-        if (sizes.length == 1) {
+        if(sizes.length == 1) {
             Log.d(TAG, "selected camera size: " + sizes[0].toString());
             return sizes[0];
         }

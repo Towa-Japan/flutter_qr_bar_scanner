@@ -7,7 +7,7 @@ public enum CameraOrientation {
     TOWARDS_USER;
 
     public static CameraOrientation parse(String value) throws NoSuchElementException {
-        switch (value) {
+        switch(value) {
             case "awayFromUser":
                 return AWAY_FROM_USER;
             case "towardsUser":

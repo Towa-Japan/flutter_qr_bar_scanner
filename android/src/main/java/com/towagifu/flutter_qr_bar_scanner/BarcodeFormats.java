@@ -36,27 +36,29 @@ public enum BarcodeFormats {
     static {
         BarcodeFormats[] values = BarcodeFormats.values();
         formatsMap = new HashMap<>(values.length * 4 / 3);
-        for (BarcodeFormats value : values) {
+        for(BarcodeFormats value : values) {
             formatsMap.put(value.name(), value.intValue);
         }
     }
 
     /**
-     * Return the integer value resuling from OR-ing all of the values
-     * of the supplied strings.
+     * Return the integer value resuling from OR-ing all of the values of the
+     * supplied strings.
      * <p>
-     * Note that if ALL_FORMATS is defined as well as other values, ALL_FORMATS
-     * will be ignored (following how it would work with just OR-ing the ints).
+     * Note that if ALL_FORMATS is defined as well as other values, ALL_FORMATS will
+     * be ignored (following how it would work with just OR-ing the ints).
      *
      * @param strings - list of strings representing the various formats
      * @return integer value corresponding to OR of all the values.
      */
     static int intFromStringList(List<String> strings) {
-        if (strings == null) return BarcodeFormats.ALL_FORMATS.intValue;
+        if(strings == null) {
+            return BarcodeFormats.ALL_FORMATS.intValue;
+        }
         int val = 0;
-        for (String string : strings) {
+        for(String string : strings) {
             Integer asInt = BarcodeFormats.formatsMap.get(string);
-            if (asInt != null) {
+            if(asInt != null) {
                 val |= asInt;
             }
         }
@@ -64,30 +66,30 @@ public enum BarcodeFormats {
     }
 
     static BarcodeScannerOptions optionsFromStringList(List<String> strings) {
-        if (strings == null) {
+        if(strings == null) {
             return new BarcodeScannerOptions.Builder().setBarcodeFormats(ALL_FORMATS.intValue).build();
         }
 
         List<Integer> ints = new ArrayList<>(strings.size());
-        for (int i = 0, l = strings.size(); i < l; ++i) {
+        for(int i = 0, l = strings.size(); i < l; ++i) {
             Integer integer = BarcodeFormats.formatsMap.get(strings.get(i));
-            if (integer != null) {
+            if(integer != null) {
                 ints.add(integer);
             }
         }
 
-        if (ints.size() == 0) {
+        if(ints.size() == 0) {
             return new BarcodeScannerOptions.Builder().setBarcodeFormats(ALL_FORMATS.intValue).build();
         }
 
-        if (ints.size() == 1) {
+        if(ints.size() == 1) {
             return new BarcodeScannerOptions.Builder().setBarcodeFormats(ints.get(0)).build();
         }
 
         int first = ints.get(0);
         int[] rest = new int[ints.size() - 1];
         int i = 0;
-        for (Integer e : ints.subList(1, ints.size())) {
+        for(Integer e : ints.subList(1, ints.size())) {
             rest[i++] = e;
         }
 
@@ -96,7 +98,7 @@ public enum BarcodeFormats {
     }
 
     public static BarcodeFormats getFromValue(final int value) {
-        for (BarcodeFormats bf : BarcodeFormats.values()) {
+        for(BarcodeFormats bf : BarcodeFormats.values()) {
             if(bf.intValue == value) {
                 return bf;
             }
