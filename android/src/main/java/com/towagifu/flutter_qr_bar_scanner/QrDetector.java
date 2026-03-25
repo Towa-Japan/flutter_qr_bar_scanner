@@ -41,19 +41,23 @@ class QrDetector implements OnSuccessListener<List<Barcode>>, OnFailureListener 
     }
 
     void detect(Frame frame) {
-        if (latestFrame != null) latestFrame.close();
+        if(latestFrame != null) {
+            latestFrame.close();
+        }
         latestFrame = frame;
 
-        if (processingFrame == null) {
+        if(processingFrame == null) {
             processLatest();
         }
     }
 
     private synchronized void processLatest() {
-        if (processingFrame != null) processingFrame.close();
+        if(processingFrame != null) {
+            processingFrame.close();
+        }
         processingFrame = latestFrame;
         latestFrame = null;
-        if (processingFrame != null) {
+        if(processingFrame != null) {
             processFrame(processingFrame);
         }
     }
@@ -62,7 +66,7 @@ class QrDetector implements OnSuccessListener<List<Barcode>>, OnFailureListener 
         InputImage image;
         try {
             image = frame.toImage();
-        } catch (IllegalStateException ex) {
+        } catch(IllegalStateException ex) {
             // ignore state exception from making frame to image
             // as the image may be closed already.
             return;

@@ -10,5 +10,6 @@
     },
     "terminal.integrated.env.windows": {
         "GRADLE_OPTS": "-Dfile.encoding=utf-8"
-    }
+    },
+    "java.format.settings.url": ".vscode/java-formatter.xml"
 }

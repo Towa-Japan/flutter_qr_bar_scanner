@@ -32,10 +32,14 @@ import io.flutter.view.TextureRegistry;
 /**
  * FlutterQrBarScannerPlugin
  */
-public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCallbacks, QrReader.QRReaderStartedCallback, PluginRegistry.RequestPermissionsResultListener, FlutterPlugin, ActivityAware {
+public class FlutterQrBarScannerPlugin
+    implements MethodCallHandler, QrReaderCallbacks, QrReader.QRReaderStartedCallback,
+    PluginRegistry.RequestPermissionsResultListener, FlutterPlugin, ActivityAware
+{
     public static final String LOG_TAG_PREFIX = "ctg.fqbrs.";
 
-    private static final String TAG = FlutterQrBarScannerPlugin.LOG_TAG_PREFIX + FlutterQrBarScannerPlugin.class.getSimpleName();
+    private static final String TAG = FlutterQrBarScannerPlugin.LOG_TAG_PREFIX
+        + FlutterQrBarScannerPlugin.class.getSimpleName();
     private static final int REQUEST_PERMISSION = 1;
     private MethodChannel channel;
     private Activity activity;
@@ -92,9 +96,9 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
 
     @Override
     public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQUEST_PERMISSION) {
+        if(requestCode == REQUEST_PERMISSION) {
             waitingForPermissionResult = false;
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i(TAG, "Permissions request granted.");
                 stopReader();
             } else {
@@ -109,11 +113,11 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
     }
 
     private void stopReader() {
-        if (readingInstance != null) {
-            if (readingInstance.reader != null) {
+        if(readingInstance != null) {
+            if(readingInstance.reader != null) {
                 readingInstance.reader.stop();
             }
-            if (readingInstance.textureEntry != null) {
+            if(readingInstance.textureEntry != null) {
                 readingInstance.textureEntry.release();
             }
         }
@@ -133,12 +137,12 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
             return;
         }
 
-        switch (methodCall.method) {
+        switch(methodCall.method) {
             case "start": {
-                if (permissionDenied) {
+                if(permissionDenied) {
                     permissionDenied = false;
                     result.error("QRREADER_ERROR", "noPermission", null);
-                } else if (readingInstance != null) {
+                } else if(readingInstance != null) {
                     result.error("ALREADY_RUNNING", "Start cannot be called when already running", "");
                 } else {
                     lastHeartbeatTimeout = methodCall.argument("heartbeatTimeout");
@@ -147,16 +151,21 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
                     List<String> formatStrings = methodCall.argument("formats");
                     CameraOrientation orientation = CameraOrientation.parse(methodCall.argument("orientation"));
 
-                    if (targetWidth == null || targetHeight == null) {
-                        result.error("INVALID_ARGUMENT", "Missing a required argument", "Expecting targetWidth, targetHeight, and optionally heartbeatTimeout");
+                    if(targetWidth == null || targetHeight == null) {
+                        result.error(
+                            "INVALID_ARGUMENT", "Missing a required argument",
+                            "Expecting targetWidth, targetHeight, and optionally heartbeatTimeout"
+                        );
                         break;
                     }
 
                     BarcodeScannerOptions options = BarcodeFormats.optionsFromStringList(formatStrings);
 
                     TextureRegistry.SurfaceTextureEntry textureEntry = textures.createSurfaceTexture();
-                    QrReader reader = new QrReader(targetWidth, targetHeight, activity, options,
-                        this, this, textureEntry.surfaceTexture());
+                    QrReader reader = new QrReader(
+                        targetWidth, targetHeight, activity, options,
+                        this, this, textureEntry.surfaceTexture()
+                    );
 
                     readingInstance = new ReadingInstance(reader, textureEntry, result);
                     try {
@@ -164,36 +173,44 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
                             lastHeartbeatTimeout == null ? 0 : lastHeartbeatTimeout,
                             orientation
                         );
-                    } catch (IOException e) {
+                    } catch(IOException e) {
                         e.printStackTrace();
-                        result.error("IOException", "Error starting camera because of IOException: " + e.getLocalizedMessage(), null);
-                    } catch (QrReader.Exception e) {
+                        result.error(
+                            "IOException", "Error starting camera because of IOException: " + e.getLocalizedMessage(),
+                            null
+                        );
+                    } catch(QrReader.Exception e) {
                         e.printStackTrace();
                         result.error(e.reason().name(), "Error starting camera for reason: " + e.reason().name(), null);
-                    } catch (NoPermissionException e) {
+                    } catch(NoPermissionException e) {
                         waitingForPermissionResult = true;
-                        ActivityCompat.requestPermissions(activity,
-                            new String[]{Manifest.permission.CAMERA}, REQUEST_PERMISSION);
+                        ActivityCompat.requestPermissions(
+                            activity,
+                            new String[] {
+                                Manifest.permission.CAMERA
+                            },
+                            REQUEST_PERMISSION
+                        );
                     }
                 }
                 break;
             }
             case "setTorchState": {
-                if (readingInstance != null && !waitingForPermissionResult) {
+                if(readingInstance != null && !waitingForPermissionResult) {
                     readingInstance.reader.qrCamera.setTorchState(methodCall.argument("isOn"));
                 }
                 result.success(null);
                 break;
             }
             case "stop": {
-                if (readingInstance != null && !waitingForPermissionResult) {
+                if(readingInstance != null && !waitingForPermissionResult) {
                     stopReader();
                 }
                 result.success(null);
                 break;
             }
             case "heartbeat": {
-                if (readingInstance != null) {
+                if(readingInstance != null) {
                     readingInstance.reader.heartBeat();
                 }
                 result.success(null);
@@ -206,9 +223,11 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
 
     @Override
     public void qrRead(Stream<QrBarcode> data) {
-        channel.invokeMethod("qrRead",
+        channel.invokeMethod(
+            "qrRead",
             data.map(d -> d.getForChannel())
-                .collect(Collectors.toCollection(ArrayList::new)));
+                .collect(Collectors.toCollection(ArrayList::new))
+        );
     }
 
     @Override
@@ -222,12 +241,12 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
     }
 
     private List<String> stackTraceAsString(StackTraceElement[] stackTrace) {
-        if (stackTrace == null) {
+        if(stackTrace == null) {
             return null;
         }
 
         List<String> stackTraceStrings = new ArrayList<>(stackTrace.length);
-        for (StackTraceElement el : stackTrace) {
+        for(StackTraceElement el : stackTrace) {
             stackTraceStrings.add(el.toString());
         }
         return stackTraceStrings;
@@ -238,8 +257,8 @@ public class FlutterQrBarScannerPlugin implements MethodCallHandler, QrReaderCal
         Log.w(TAG, "Starting QR Mobile Vision failed", t);
         List<String> stackTraceStrings = stackTraceAsString(t.getStackTrace());
 
-        if (t instanceof QrReader.Exception) {
-            QrReader.Exception qrException = (QrReader.Exception) t;
+        if(t instanceof QrReader.Exception) {
+            QrReader.Exception qrException = (QrReader.Exception)t;
             readingInstance.startResult.error("QRREADER_ERROR", qrException.reason().name(), stackTraceStrings);
         } else {
             readingInstance.startResult.error("UNKNOWN_ERROR", t.getMessage(), stackTraceStrings);
