@@ -57,8 +57,8 @@ class _MyAppState extends State<MyApp> {
                   height: 1000,
                   width: 500,
                   child: GestureDetector(
-                    onTap: () =>
-                        _cameraController.isTorchOn = !_cameraController.isTorchOn,
+                    onTap: () => _cameraController.isTorchOn =
+                        !_cameraController.isTorchOn,
                     onLongPress: () => _cameraController.orientation =
                         (_cameraController.orientation ==
                                 CameraOrientation.awayFromUser
@@ -78,7 +78,13 @@ class _MyAppState extends State<MyApp> {
                 )
               : GestureDetector(
                   onTap: () => setState(() => _camState = true),
-                  child: Text(_qrInfo!),
+                  child: AbsorbPointer(
+                    child: SizedBox.expand(
+                      child: Center(
+                        child: Text(_qrInfo!),
+                      ),
+                    ),
+                  ),
                 ),
         ),
       ),
